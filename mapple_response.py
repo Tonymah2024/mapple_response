@@ -13,7 +13,7 @@ import numpy as np
 import statsmodels.api as sm
 import plotly.express as px
 
-# 🇨🇦 Improved Styling for Better Readability on White Background 🇨🇦
+# 🇨🇦 Improved Styling for Visibility on White Background 🇨🇦
 st.markdown(
     """
     <style>
@@ -40,12 +40,14 @@ st.markdown(
         .table-header {
             font-size: 20px;
             font-weight: bold;
-            color: #333333; /* Dark Grey */
+            color: #333333 !important; /* Dark Grey - Ensures visibility */
+            background-color: transparent;
         }
         .table-value {
             font-size: 20px;
             font-weight: bold;
-            color: #4a4a4a; /* Grey */
+            color: #4a4a4a !important; /* Grey - Ensures visibility */
+            background-color: transparent;
         }
         .section-bg {
             background-color: #f9f9f9;
@@ -96,31 +98,50 @@ predicted_trade_volume = model.predict(new_data)[0]
 st.markdown('<p class="sub-header">📉 Economic Impact Analysis</p>', unsafe_allow_html=True)
 st.markdown('<p class="info-text">This section estimates how tariffs impact trade volume, GDP, and employment.</p>', unsafe_allow_html=True)
 
-# Display the Table with Styled Columns
-styled_table = pd.DataFrame({
-    "Indicator": [
-        '<span class="table-header">Predicted Trade Volume (Billion CAD)</span>',
-        '<span class="table-header">GDP Loss Estimate (Billion CAD)</span>',
-        '<span class="table-header">Job Loss Estimate</span>'
-    ],
-    "Estimated Value": [
-        f'<span class="table-value">{round(predicted_trade_volume, 2)}</span>',
-        f'<span class="table-value">{round(0.05 * tariff_rate, 2)}</span>',
-        f'<span class="table-value">{round(3000 * tariff_rate, 0)}</span>'
-    ]
-})
-st.markdown(styled_table.to_html(escape=False), unsafe_allow_html=True)
+# ✅ FIXED TABLE STYLING
+styled_table = f"""
+<table>
+    <tr>
+        <th class="table-header">Indicator</th>
+        <th class="table-header">Estimated Value</th>
+    </tr>
+    <tr>
+        <td class="table-value">Predicted Trade Volume (Billion CAD)</td>
+        <td class="table-value">{round(predicted_trade_volume, 2)}</td>
+    </tr>
+    <tr>
+        <td class="table-value">GDP Loss Estimate (Billion CAD)</td>
+        <td class="table-value">{round(0.05 * tariff_rate, 2)}</td>
+    </tr>
+    <tr>
+        <td class="table-value">Job Loss Estimate</td>
+        <td class="table-value">{round(3000 * tariff_rate, 0)}</td>
+    </tr>
+</table>
+"""
+st.markdown(styled_table, unsafe_allow_html=True)
 
 # 🇨🇦 Retaliatory Tariff Policy Simulation 🇨🇦
 st.markdown('<p class="sub-header">⚖️ Policy Response Simulation</p>', unsafe_allow_html=True)
 st.markdown('<p class="info-text">Explore potential government responses, including counter-tariffs and subsidies.</p>', unsafe_allow_html=True)
 
-retaliatory_tariffs = {
-    '<span class="table-header">U.S. Imports Affected (Billion CAD)</span>': f'<span class="table-value">{round(0.2 * tariff_rate, 2)}</span>',
-    '<span class="table-header">Potential Revenue from Tariffs (Billion CAD)</span>': f'<span class="table-value">{round(0.08 * tariff_rate, 2)}</span>'
-}
-for key, value in retaliatory_tariffs.items():
-    st.markdown(f"{key}: {value}", unsafe_allow_html=True)
+retaliatory_tariffs = f"""
+<table>
+    <tr>
+        <th class="table-header">Policy Measure</th>
+        <th class="table-header">Estimated Impact</th>
+    </tr>
+    <tr>
+        <td class="table-value">U.S. Imports Affected (Billion CAD)</td>
+        <td class="table-value">{round(0.2 * tariff_rate, 2)}</td>
+    </tr>
+    <tr>
+        <td class="table-value">Potential Revenue from Tariffs (Billion CAD)</td>
+        <td class="table-value">{round(0.08 * tariff_rate, 2)}</td>
+    </tr>
+</table>
+"""
+st.markdown(retaliatory_tariffs, unsafe_allow_html=True)
 
 # Visualization: 🇨🇦 Trade Exposure by Province 🇨🇦
 st.markdown('<p class="sub-header">📍 Trade Exposure by Province</p>', unsafe_allow_html=True)
@@ -132,4 +153,4 @@ fig = px.bar(province_data, x="Province", y="Trade Exposure (%)", color="Trade E
              title="Provincial Trade Exposure to U.S. Tariffs", text="Trade Exposure (%)")
 st.plotly_chart(fig)
 
-st.markdown('<p class="info-text">🍁 <strong>Prototype Version 1.5 - Developed by VisiVault Analytics Ltd.</strong> 🍁</p>', unsafe_allow_html=True)
+st.markdown('<p class="info-text">🍁 <strong>Prototype Version 1.6 - Developed by VisiVault Analytics Ltd.</strong> 🍁</p>', unsafe_allow_html=True)
