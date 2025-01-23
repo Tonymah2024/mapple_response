@@ -13,7 +13,7 @@ import numpy as np
 import statsmodels.api as sm
 import plotly.express as px
 
-# 🇨🇦 Add Canadian Styling with Improved Colors 🇨🇦
+# 🇨🇦 Improved Canadian Styling for Better Visibility 🇨🇦
 st.markdown(
     """
     <style>
@@ -36,6 +36,10 @@ st.markdown(
             font-size: 18px;
             color: #333333; /* Dark Gray */
             text-align: center;
+        }
+        .table-text {
+            font-size: 18px;
+            color: #333333; /* Dark Gray */
         }
         .section-bg {
             background-color: #f9f9f9;
@@ -90,6 +94,8 @@ predicted_trade_volume = model.predict(new_data)[0]
 
 # 🇨🇦 Display Trade Impact Analysis 🇨🇦
 st.markdown('<p class="sub-header">📉 Economic Impact Analysis</p>', unsafe_allow_html=True)
+st.markdown('<p class="table-text">This section estimates how tariffs impact trade volume, GDP, and employment.</p>', unsafe_allow_html=True)
+
 trade_impact_data = pd.DataFrame({
     "Indicator": ["Predicted Trade Volume (Billion CAD)", "GDP Loss Estimate (Billion CAD)", "Job Loss Estimate"],
     "Estimated Value": [round(predicted_trade_volume, 2), round(0.05 * tariff_rate, 2), round(3000 * tariff_rate, 0)]
@@ -98,6 +104,8 @@ st.table(trade_impact_data)
 
 # 🇨🇦 Retaliatory Tariff Policy Simulation 🇨🇦
 st.markdown('<p class="sub-header">⚖️ Policy Response Simulation</p>', unsafe_allow_html=True)
+st.markdown('<p class="table-text">Explore potential government responses, including counter-tariffs and subsidies.</p>', unsafe_allow_html=True)
+
 retaliatory_tariffs = {
     "U.S. Imports Affected (Billion CAD)": round(0.2 * tariff_rate, 2),
     "Potential Revenue from Tariffs (Billion CAD)": round(0.08 * tariff_rate, 2)
@@ -122,4 +130,4 @@ fig = px.bar(province_data, x="Province", y="Trade Exposure (%)", color="Trade E
              title="Provincial Trade Exposure to U.S. Tariffs", text="Trade Exposure (%)")
 st.plotly_chart(fig)
 
-st.markdown('<p class="info-text">🍁 <strong>Prototype Version 1.2 - Developed by VisiVault Analytics Ltd.</strong> 🍁</p>', unsafe_allow_html=True)
+st.markdown('<p class="info-text">🍁 <strong>Prototype Version 1.3 - Developed by VisiVault Analytics Ltd.</strong> 🍁</p>', unsafe_allow_html=True)
