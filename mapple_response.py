@@ -15,6 +15,7 @@ import statsmodels.api as sm
 import plotly.express as px
 import requests
 import io
+import os  # Fix: Import os
 import joblib  # AI Model
 from fpdf import FPDF
 from sklearn.linear_model import LinearRegression
