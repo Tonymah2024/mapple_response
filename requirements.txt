@@ -3,6 +3,7 @@ streamlit
 pandas
 numpy
 plotly
-statsmodels
 fpdf
+joblib
+
 
