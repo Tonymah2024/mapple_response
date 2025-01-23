@@ -13,24 +13,34 @@ import numpy as np
 import statsmodels.api as sm
 import plotly.express as px
 
-# 🇨🇦 Add Canadian Styling 🇨🇦
+# 🇨🇦 Add Canadian Styling with Improved Colors 🇨🇦
 st.markdown(
     """
     <style>
         .stApp {
-            background-color: #f5f5f5;
+            background-color: #ffffff;
         }
         .title-text {
             font-size: 36px;
             font-weight: bold;
-            color: #d32f2f; /* Canadian red */
+            color: #b71c1c; /* Dark Red */
             text-align: center;
         }
         .sub-header {
             font-size: 24px;
             font-weight: bold;
-            color: #555;
+            color: #0d47a1; /* Deep Blue */
             text-align: center;
+        }
+        .info-text {
+            font-size: 18px;
+            color: #333333; /* Dark Gray */
+            text-align: center;
+        }
+        .section-bg {
+            background-color: #f9f9f9;
+            padding: 10px;
+            border-radius: 5px;
         }
     </style>
     """,
@@ -51,9 +61,9 @@ tariff_rate = st.sidebar.slider("Tariff Rate Increase (%)", 10, 50, 25, 5)
 
 # 🇨🇦 Canadian Economic Data (Mock)
 st.markdown('<p class="sub-header">📊 Canadian Trade Overview</p>', unsafe_allow_html=True)
-st.write("🇨🇦 **Canada GDP:** CAD 2.2 Trillion")
-st.write("🌎 **Top Trading Partners:** USA, China, EU, Mexico")
-st.write("📈 **Annual Exports to USA:** CAD 500 Billion")
+st.markdown('<p class="info-text">🇨🇦 <strong>Canada GDP:</strong> CAD 2.2 Trillion</p>', unsafe_allow_html=True)
+st.markdown('<p class="info-text">🌎 <strong>Top Trading Partners:</strong> USA, China, EU, Mexico</p>', unsafe_allow_html=True)
+st.markdown('<p class="info-text">📈 <strong>Annual Exports to USA:</strong> CAD 500 Billion</p>', unsafe_allow_html=True)
 
 # Gravity Model Data (Mock Data for Demonstration)
 trade_data = pd.DataFrame({
@@ -112,4 +122,4 @@ fig = px.bar(province_data, x="Province", y="Trade Exposure (%)", color="Trade E
              title="Provincial Trade Exposure to U.S. Tariffs", text="Trade Exposure (%)")
 st.plotly_chart(fig)
 
-st.markdown("### 🍁 Prototype Version 1.1 - Developed by VisiVault Analytics Ltd. 🍁")
+st.markdown('<p class="info-text">🍁 <strong>Prototype Version 1.2 - Developed by VisiVault Analytics Ltd.</strong> 🍁</p>', unsafe_allow_html=True)
