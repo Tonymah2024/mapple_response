@@ -81,4 +81,4 @@ fig = px.bar(province_data, x="Province", y="Trade Exposure (%)", color="Trade E
              title="Provincial Trade Exposure to U.S. Tariffs", text="Trade Exposure (%)")
 st.plotly_chart(fig)
 
-st.markdown("# Prototype Version 1.1 - Developed by VisiVault Analytics Ltd.")
+st.markdown("Prototype Version 1.1 - Developed by VisiVault Analytics Ltd.")
