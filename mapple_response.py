@@ -16,81 +16,152 @@ import requests
 import io
 from fpdf import FPDF
 import joblib  # For AI model
-import openpyxl  # Ensure openpyxl is installed for Excel export
+import openpyxl  # Ensure Excel export works
 
-# ==================== 🇨🇦 Styling for Visibility 🇨🇦 ==================
+# ==================== 🇨🇦 Styling for Visibility 🇨🇦 ====================
 st.markdown(
     """
     <style>
-    .reportview-container { background-color: #f0f2f6; }
-    .sidebar .sidebar-content { background-color: #f9f9f9; }
+        .stApp {
+            background-color: #ffffff;
+        }
+        .title-text {
+            font-size: 36px;
+            font-weight: bold;
+            color: #4a4a4a;
+            text-align: center;
+        }
+        .sub-header {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333333;
+            text-align: center;
+        }
+        .info-text {
+            font-size: 18px;
+            color: #4a4a4a;
+            text-align: center;
+        }
     </style>
     """,
-    unsafe_allow_html=True
+    unsafe_allow_html=True,
 )
 
-# **Title of the Web App**
-st.title("Trade Impact Analysis & Policy Simulation Tool")
+# ==================== 🇨🇦 Title & Header 🇨🇦 ====================
+st.markdown('<p class="title-text">🍁 Trade Impact Analysis & Policy Simulation Tool 🍁</p>', unsafe_allow_html=True)
+st.image("https://upload.wikimedia.org/wikipedia/commons/c/cf/Flag_of_Canada.svg", width=200)
 
-# **Sidebar for User Input**
-st.sidebar.header("Simulation Settings")
+# ==================== 🌍 Fetch Real-Time Economic Indicators 🌍 ====================
+st.markdown('<p class="sub-header">📊 Real-Time Economic Indicators</p>', unsafe_allow_html=True)
+world_bank_url = "https://api.worldbank.org/v2/country/CA/indicator/NY.GDP.MKTP.CD?format=json"
+response = requests.get(world_bank_url)
 
-# **User Inputs**
-gdp_growth = st.sidebar.slider("GDP Growth Rate (%)", 0.0, 10.0, 3.0)
-corporate_tax_change = st.sidebar.slider("Corporate Tax Change (%)", -10.0, 10.0, 0.0)
-trade_tariff_change = st.sidebar.slider("Trade Tariff Change (%)", -5.0, 5.0, 0.0)
+if response.status_code == 200:
+    data = response.json()
+    latest_gdp = data[1][0]["value"]
+    st.markdown(f'<p class="info-text">🇨🇦 **Canada GDP (Latest):** CAD {latest_gdp:,.2f}</p>', unsafe_allow_html=True)
+else:
+    st.markdown('<p class="info-text">⚠️ Unable to fetch real-time GDP data.</p>', unsafe_allow_html=True)
 
-# **Dummy Data Simulation**
-data = {
-    "GDP Growth (%)": [gdp_growth, gdp_growth + 0.5, gdp_growth - 0.3],
-    "Corporate Tax (%)": [corporate_tax_change, corporate_tax_change + 1, corporate_tax_change - 1],
-    "Trade Tariff (%)": [trade_tariff_change, trade_tariff_change + 0.5, trade_tariff_change - 0.5],
+# ==================== 🇨🇦 Sidebar Inputs 🇨🇦 ====================
+st.sidebar.header("🇨🇦 Simulation Settings 🇨🇦")
+
+sectors = ["Automotive", "Agriculture", "Manufacturing", "Energy", "Technology"]
+selected_sector = st.sidebar.selectbox("Select Industry Sector:", sectors)
+tariff_rate = st.sidebar.slider("Tariff Rate Increase (%)", 10, 50, 25, 5)
+
+# ==================== 📉 Economic Impact Analysis 📉 ====================
+st.markdown('<p class="sub-header">📉 Economic Impact Analysis</p>', unsafe_allow_html=True)
+
+predicted_trade_volume = round(500 - (tariff_rate * 5), 2)
+gdp_loss = round(0.05 * tariff_rate, 2)
+job_loss = round(3000 * tariff_rate, 0)
+
+economic_table = pd.DataFrame({
+    "Indicator": ["Predicted Trade Volume (Billion CAD)", "GDP Loss Estimate (Billion CAD)", "Job Loss Estimate"],
+    "Estimated Value": [predicted_trade_volume, gdp_loss, job_loss]
+})
+
+st.table(economic_table)
+
+# ==================== ⚖️ Custom Policy Adjustments ⚖️ ====================
+st.markdown('<p class="sub-header">⚖️ Custom Policy Adjustments</p>', unsafe_allow_html=True)
+subsidy_amount = st.slider("Government Subsidy Support (Billion CAD)", 0, 50, 10, 1)
+alternative_trade_agreements = st.selectbox("Expand Trade with:", ["EU", "China", "India", "Mexico", "Japan"])
+corporate_tax_change = st.slider("Adjust Corporate Tax Rate (%)", -5, 5, 0, 1)
+
+policy_results = {
+    "Subsidy Amount (Billion CAD)": subsidy_amount,
+    "New Trade Partner": alternative_trade_agreements,
+    "Corporate Tax Adjustment (%)": corporate_tax_change
 }
+st.json(policy_results)
 
-economic_table = pd.DataFrame(data)
+# ==================== 🔍 Predictive Economic Simulation 🔍 ====================
+st.markdown('<p class="sub-header">📊 Predictive Economic Simulation</p>', unsafe_allow_html=True)
 
-# **Show Data Table**
-st.subheader("📊 Economic Indicators Table")
-st.write(economic_table)
+# Load pre-trained ML model for prediction (mock model)
+try:
+    model = joblib.load("ai_trade_model.pkl")
+    future_trade_volume = model.predict([[tariff_rate, subsidy_amount, corporate_tax_change]])[0]
+    st.markdown(f'<p class="info-text">📈 **Predicted Trade Volume in 5 Years:** {future_trade_volume:,.2f} Billion CAD</p>', unsafe_allow_html=True)
+except:
+    st.markdown('<p class="info-text">⚠️ AI model not found. Using default projections.</p>', unsafe_allow_html=True)
 
-# **Visualization**
-fig = px.bar(economic_table, x=["Scenario 1", "Scenario 2", "Scenario 3"], y=["GDP Growth (%)", "Corporate Tax (%)", "Trade Tariff (%)"], barmode='group')
-st.plotly_chart(fig)
+# ==================== 🤖 AI-Powered Trade Recommendations 🤖 ====================
+st.markdown('<p class="sub-header">🤖 AI-Powered Trade Recommendations</p>', unsafe_allow_html=True)
 
-# 📥 **Export to Excel**
+if tariff_rate > 30:
+    st.markdown('<p class="info-text">⚠️ **Recommendation:** Consider reducing tariffs to prevent excessive job losses.</p>', unsafe_allow_html=True)
+elif subsidy_amount > 20:
+    st.markdown('<p class="info-text">💡 **Recommendation:** Higher subsidies can help offset trade shocks.</p>', unsafe_allow_html=True)
+else:
+    st.markdown('<p class="info-text">✅ **Recommendation:** The current policy mix appears balanced.</p>', unsafe_allow_html=True)
+
+# ==================== 📄 Export Reports to PDF & Excel 📄 ====================
+st.markdown('<p class="sub-header">📑 Export Report</p>', unsafe_allow_html=True)
+
+# 📥 Export to Excel
 excel_buffer = io.BytesIO()
 with pd.ExcelWriter(excel_buffer, engine='openpyxl') as writer:
     economic_table.to_excel(writer, index=False, sheet_name='Economic Indicators')
     writer.close()
+excel_buffer.seek(0)
 
-excel_buffer.seek(0)  # Move cursor to the beginning
 st.download_button(
     label="📥 Download Excel Report",
-    data=excel_buffer,
-    file_name="economic_report.xlsx",
+    data=excel_buffer.getvalue(),
+    file_name="trade_impact_analysis.xlsx",
     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 )
 
-# 📄 **Generate PDF Report**
+# 📥 Export to PDF
 pdf = FPDF()
 pdf.add_page()
 pdf.set_font("Arial", size=12)
-pdf.cell(200, 10, "Economic Analysis Report", ln=True, align='C')
+pdf.cell(200, 10, "Trade Impact Analysis Report", ln=True, align='C')
 pdf.ln(10)
-pdf.cell(200, 10, f"GDP Growth: {gdp_growth}%", ln=True)
-pdf.cell(200, 10, f"Corporate Tax Change: {corporate_tax_change}%", ln=True)
-pdf.cell(200, 10, f"Trade Tariff Change: {trade_tariff_change}%", ln=True)
 
-# **Fixing BytesIO Issue**
+pdf.cell(200, 10, f"Predicted Trade Volume: {predicted_trade_volume} Billion CAD", ln=True)
+pdf.cell(200, 10, f"GDP Loss Estimate: {gdp_loss} Billion CAD", ln=True)
+pdf.cell(200, 10, f"Job Loss Estimate: {job_loss}", ln=True)
+pdf.ln(10)
+
+pdf.cell(200, 10, f"Subsidy Support: {subsidy_amount} Billion CAD", ln=True)
+pdf.cell(200, 10, f"New Trade Partner: {alternative_trade_agreements}", ln=True)
+pdf.cell(200, 10, f"Corporate Tax Change: {corporate_tax_change}%", ln=True)
+
 pdf_buffer = io.BytesIO()
 pdf_content = pdf.output(dest='S').encode('latin1')  # Encode properly
 pdf_buffer.write(pdf_content)
-pdf_buffer.seek(0)  # Move cursor to beginning
+pdf_buffer.seek(0)
 
-# **Download PDF**
 st.download_button(
     label="📥 Download PDF Report",
-    data=pdf_buffer,
-    file_name="economic_report.pdf",
+    data=pdf_buffer.getvalue(),
+    file_name="trade_impact_analysis.pdf",
     mime="application/pdf"
 )
+
+# ==================== ✅ Final Message ✅ ====================
+st.markdown('<p class="info-text">🍁 <strong>Prototype Version 2.0 - Developed by VisiVault Analytics Ltd.</strong> 🍁</p>', unsafe_allow_html=True)
