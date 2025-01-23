@@ -15,8 +15,9 @@ import plotly.express as px
 import requests
 import io
 from fpdf import FPDF
+import joblib  # For AI model
 
-# ==================== 🇨🇦 Styling for White Background & Visibility 🇨🇦 ====================
+# ==================== 🇨🇦 Styling for Visibility 🇨🇦 ====================
 st.markdown(
     """
     <style>
@@ -26,29 +27,19 @@ st.markdown(
         .title-text {
             font-size: 36px;
             font-weight: bold;
-            color: #4a4a4a; /* Grey */
+            color: #4a4a4a;
             text-align: center;
         }
         .sub-header {
             font-size: 24px;
             font-weight: bold;
-            color: #333333; /* Dark Grey */
+            color: #333333;
             text-align: center;
         }
         .info-text {
             font-size: 18px;
-            color: #4a4a4a; /* Grey */
+            color: #4a4a4a;
             text-align: center;
-        }
-        .table-header {
-            font-size: 20px;
-            font-weight: bold;
-            color: #333333 !important; /* Dark Grey */
-        }
-        .table-value {
-            font-size: 20px;
-            font-weight: bold;
-            color: #4a4a4a !important; /* Grey */
         }
     </style>
     """,
@@ -59,14 +50,7 @@ st.markdown(
 st.markdown('<p class="title-text">🍁 Trade Impact Analysis & Policy Simulation Tool 🍁</p>', unsafe_allow_html=True)
 st.image("https://upload.wikimedia.org/wikipedia/commons/c/cf/Flag_of_Canada.svg", width=200)
 
-# ==================== 🇨🇦 Sidebar Inputs 🇨🇦 ====================
-st.sidebar.header("🇨🇦 Simulation Settings 🇨🇦")
-
-sectors = ["Automotive", "Agriculture", "Manufacturing", "Energy", "Technology"]
-selected_sector = st.sidebar.selectbox("Select Industry Sector:", sectors)
-tariff_rate = st.sidebar.slider("Tariff Rate Increase (%)", 10, 50, 25, 5)
-
-# ==================== 🌍 Fetch Real-Time Economic Indicators from the World Bank API 🌍 ====================
+# ==================== 🌍 Fetch Real-Time Economic Indicators 🌍 ====================
 st.markdown('<p class="sub-header">📊 Real-Time Economic Indicators</p>', unsafe_allow_html=True)
 world_bank_url = "https://api.worldbank.org/v2/country/CA/indicator/NY.GDP.MKTP.CD?format=json"
 response = requests.get(world_bank_url)
@@ -77,6 +61,13 @@ if response.status_code == 200:
     st.markdown(f'<p class="info-text">🇨🇦 **Canada GDP (Latest):** CAD {latest_gdp:,.2f}</p>', unsafe_allow_html=True)
 else:
     st.markdown('<p class="info-text">⚠️ Unable to fetch real-time GDP data.</p>', unsafe_allow_html=True)
+
+# ==================== 🇨🇦 Sidebar Inputs 🇨🇦 ====================
+st.sidebar.header("🇨🇦 Simulation Settings 🇨🇦")
+
+sectors = ["Automotive", "Agriculture", "Manufacturing", "Energy", "Technology"]
+selected_sector = st.sidebar.selectbox("Select Industry Sector:", sectors)
+tariff_rate = st.sidebar.slider("Tariff Rate Increase (%)", 10, 50, 25, 5)
 
 # ==================== 📉 Economic Impact Analysis 📉 ====================
 st.markdown('<p class="sub-header">📉 Economic Impact Analysis</p>', unsafe_allow_html=True)
@@ -92,7 +83,7 @@ economic_table = pd.DataFrame({
 
 st.table(economic_table)
 
-# ==================== ⚖️ Enhanced Policy Simulation - User Input for Custom Policies ⚖️ ====================
+# ==================== ⚖️ Custom Policy Adjustments ⚖️ ====================
 st.markdown('<p class="sub-header">⚖️ Custom Policy Adjustments</p>', unsafe_allow_html=True)
 subsidy_amount = st.slider("Government Subsidy Support (Billion CAD)", 0, 50, 10, 1)
 alternative_trade_agreements = st.selectbox("Expand Trade with:", ["EU", "China", "India", "Mexico", "Japan"])
@@ -105,8 +96,28 @@ policy_results = {
 }
 st.json(policy_results)
 
-# ==================== 📄 Export Reports as PDF & Excel 📄 ====================
+# ==================== 🔍 Predictive Economic Simulation 🔍 ====================
+st.markdown('<p class="sub-header">📊 Predictive Economic Simulation</p>', unsafe_allow_html=True)
 
+# Load pre-trained ML model for prediction (mock model)
+try:
+    model = joblib.load("ai_trade_model.pkl")
+    future_trade_volume = model.predict([[tariff_rate, subsidy_amount, corporate_tax_change]])[0]
+    st.markdown(f'<p class="info-text">📈 **Predicted Trade Volume in 5 Years:** {future_trade_volume:,.2f} Billion CAD</p>', unsafe_allow_html=True)
+except:
+    st.markdown('<p class="info-text">⚠️ AI model not found. Using default projections.</p>', unsafe_allow_html=True)
+
+# ==================== 🤖 AI-Powered Trade Recommendations 🤖 ====================
+st.markdown('<p class="sub-header">🤖 AI-Powered Trade Recommendations</p>', unsafe_allow_html=True)
+
+if tariff_rate > 30:
+    st.markdown('<p class="info-text">⚠️ **Recommendation:** Consider reducing tariffs to prevent excessive job losses.</p>', unsafe_allow_html=True)
+elif subsidy_amount > 20:
+    st.markdown('<p class="info-text">💡 **Recommendation:** Higher subsidies can help offset trade shocks.</p>', unsafe_allow_html=True)
+else:
+    st.markdown('<p class="info-text">✅ **Recommendation:** The current policy mix appears balanced.</p>', unsafe_allow_html=True)
+
+# ==================== 📄 Export Reports to PDF & Excel 📄 ====================
 st.markdown('<p class="sub-header">📑 Export Report</p>', unsafe_allow_html=True)
 
 # 📥 Export to Excel
@@ -146,4 +157,4 @@ st.download_button(
 )
 
 # ==================== ✅ Final Message ✅ ====================
-st.markdown('<p class="info-text">🍁 <strong>Prototype Version 1.7 - Developed by VisiVault Analytics Ltd.</strong> 🍁</p>', unsafe_allow_html=True)
+st.markdown('<p class="info-text">🍁 <strong>Prototype Version 2.0 - Developed by VisiVault Analytics Ltd.</strong> 🍁</p>', unsafe_allow_html=True)
