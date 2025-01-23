@@ -7,6 +7,7 @@ Original file is located at
     https://colab.research.google.com/drive/1BWvPLs9O5-RKRQE00R9Ds9-4-8voAkux
 """
 
+# -*- coding: utf-8 -*-
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -16,8 +17,7 @@ import requests
 import io
 import joblib
 from fpdf import FPDF
-from sklearn.model_selection import train_test_split
-from sklearn.linear_model import LinearRegression
+from sklearn.linear_model import LinearRegression  # Ensure sklearn is imported
 
 # ==================== 🇨🇦 Styling for Visibility 🇨🇦 ====================
 st.markdown(
@@ -36,7 +36,7 @@ st.markdown(
 st.markdown('<p class="title-text">🍁 Trade Impact Analysis & Policy Simulation Tool 🍁</p>', unsafe_allow_html=True)
 st.image("https://upload.wikimedia.org/wikipedia/commons/c/cf/Flag_of_Canada.svg", width=200)
 
-# ==================== 🌍 Fetch Real-Time Economic Data 🌍 ====================
+# ==================== 🌍 Fetch Real-Time Economic Indicators 🌍 ====================
 st.markdown('<p class="sub-header">📊 Real-Time Economic Indicators</p>', unsafe_allow_html=True)
 world_bank_url = "https://api.worldbank.org/v2/country/CA/indicator/NY.GDP.MKTP.CD?format=json"
 response = requests.get(world_bank_url)
@@ -46,7 +46,6 @@ if response.status_code == 200:
     latest_gdp = data[1][0]["value"]
     st.markdown(f'<p class="info-text">🇨🇦 **Canada GDP (Latest):** CAD {latest_gdp:,.2f}</p>', unsafe_allow_html=True)
 else:
-    latest_gdp = 2000  # Default fallback
     st.markdown('<p class="info-text">⚠️ Unable to fetch real-time GDP data.</p>', unsafe_allow_html=True)
 
 # ==================== 🇨🇦 Sidebar Inputs 🇨🇦 ====================
@@ -70,40 +69,48 @@ economic_table = pd.DataFrame({
 
 st.table(economic_table)
 
-# ==================== 📊 AI-Powered Trade Forecasting 📊 ====================
-st.markdown('<p class="sub-header">📊 Predictive Economic Simulation</p>', unsafe_allow_html=True)
+# ==================== ⚖️ Custom Policy Adjustments ⚖️ ====================
+st.markdown('<p class="sub-header">⚖️ Custom Policy Adjustments</p>', unsafe_allow_html=True)
+subsidy_amount = st.slider("Government Subsidy Support (Billion CAD)", 0, 50, 10, 1)
+alternative_trade_agreements = st.selectbox("Expand Trade with:", ["EU", "China", "India", "Mexico", "Japan"])
+corporate_tax_change = st.slider("Adjust Corporate Tax Rate (%)", -5, 5, 0, 1)
 
-def train_ai_model():
-    """Train and save a predictive model using economic data."""
-    data = {
-        "Tariff Rate (%)": [10, 20, 30, 40, 50],
-        "Subsidy (Billion CAD)": [5, 10, 15, 20, 25],
-        "Corporate Tax Change (%)": [1, -2, 0, 3, -1],
-        "GDP (Billion CAD)": [2000, 2100, 1950, 2200, 2050],
-        "Trade Volume (Billion CAD)": [500, 480, 450, 430, 410]
-    }
-    df = pd.DataFrame(data)
-    X = df[["Tariff Rate (%)", "Subsidy (Billion CAD)", "Corporate Tax Change (%)", "GDP (Billion CAD)"]]
-    y = df["Trade Volume (Billion CAD)"]
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-    model = LinearRegression()
-    model.fit(X_train, y_train)
-    joblib.dump(model, "ai_trade_model.pkl")
+policy_results = {
+    "Subsidy Amount (Billion CAD)": subsidy_amount,
+    "New Trade Partner": alternative_trade_agreements,
+    "Corporate Tax Adjustment (%)": corporate_tax_change
+}
+st.json(policy_results)
+
+# ==================== 🔍 Predictive Economic Simulation 🔍 ====================
+st.markdown('<p class="sub-header">📊 Predictive Economic Simulation</p>', unsafe_allow_html=True)
 
 try:
     model = joblib.load("ai_trade_model.pkl")
-    future_trade_volume = model.predict([[tariff_rate, 10, 0, latest_gdp]])[0]
+    future_trade_volume = model.predict([[tariff_rate, subsidy_amount, corporate_tax_change]])[0]
     st.markdown(f'<p class="info-text">📈 **Predicted Trade Volume in 5 Years:** {future_trade_volume:,.2f} Billion CAD</p>', unsafe_allow_html=True)
-except:
-    train_ai_model()
-    st.markdown('<p class="info-text">⚠️ AI model trained. Reload the app to use predictions.</p>', unsafe_allow_html=True)
+except Exception as e:
+    st.markdown('<p class="info-text">⚠️ AI model not found. Using default projections.</p>', unsafe_allow_html=True)
+    print(e)
 
-# ==================== 📄 Export Reports 📄 ====================
+# ==================== 🤖 AI-Powered Trade Recommendations 🤖 ====================
+st.markdown('<p class="sub-header">🤖 AI-Powered Trade Recommendations</p>', unsafe_allow_html=True)
+
+if tariff_rate > 30:
+    st.markdown('<p class="info-text">⚠️ **Recommendation:** Consider reducing tariffs to prevent excessive job losses.</p>', unsafe_allow_html=True)
+elif subsidy_amount > 20:
+    st.markdown('<p class="info-text">💡 **Recommendation:** Higher subsidies can help offset trade shocks.</p>', unsafe_allow_html=True)
+else:
+    st.markdown('<p class="info-text">✅ **Recommendation:** The current policy mix appears balanced.</p>', unsafe_allow_html=True)
+
+# ==================== 📄 Export Reports to PDF & Excel 📄 ====================
 st.markdown('<p class="sub-header">📑 Export Report</p>', unsafe_allow_html=True)
 
 # 📥 Export to Excel
 excel_buffer = io.BytesIO()
-economic_table.to_excel(excel_buffer, index=False)
+with pd.ExcelWriter(excel_buffer, engine="openpyxl") as writer:
+    economic_table.to_excel(writer, index=False)
+
 st.download_button(
     label="📥 Download Excel Report",
     data=excel_buffer.getvalue(),
@@ -117,12 +124,20 @@ pdf.add_page()
 pdf.set_font("Arial", size=12)
 pdf.cell(200, 10, "Trade Impact Analysis Report", ln=True, align='C')
 pdf.ln(10)
+
 pdf.cell(200, 10, f"Predicted Trade Volume: {predicted_trade_volume} Billion CAD", ln=True)
 pdf.cell(200, 10, f"GDP Loss Estimate: {gdp_loss} Billion CAD", ln=True)
 pdf.cell(200, 10, f"Job Loss Estimate: {job_loss}", ln=True)
+pdf.ln(10)
+
+pdf.cell(200, 10, f"Subsidy Support: {subsidy_amount} Billion CAD", ln=True)
+pdf.cell(200, 10, f"New Trade Partner: {alternative_trade_agreements}", ln=True)
+pdf.cell(200, 10, f"Corporate Tax Change: {corporate_tax_change}%", ln=True)
 
 pdf_buffer = io.BytesIO()
-pdf.output(pdf_buffer, 'F')
+pdf_output = pdf.output(dest='S').encode('latin1')  # Corrected
+pdf_buffer.write(pdf_output)
+
 st.download_button(
     label="📥 Download PDF Report",
     data=pdf_buffer.getvalue(),
@@ -131,4 +146,4 @@ st.download_button(
 )
 
 # ==================== ✅ Final Message ✅ ====================
-st.markdown('<p class="info-text">🍁 <strong>Prototype Version 2.1 - Developed by VisiVault Analytics Ltd.</strong> 🍁</p>', unsafe_allow_html=True)
+st.markdown('<p class="info-text">🍁 <strong>Prototype Version 2.0 - Developed by VisiVault Analytics Ltd.</strong> 🍁</p>', unsafe_allow_html=True)
