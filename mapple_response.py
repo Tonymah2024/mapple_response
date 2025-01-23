@@ -14,7 +14,7 @@ import statsmodels.api as sm
 import plotly.express as px
 
 # Title of the Web App
-st.title("Trade Impact Analysis & Policy Simulation Tool")
+st.title("Mapple response: Trade Impact Analysis & Policy Simulation Tool")
 
 # Sidebar for User Input
 st.sidebar.header("Simulation Settings")
