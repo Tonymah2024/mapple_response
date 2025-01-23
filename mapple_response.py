@@ -13,7 +13,7 @@ import numpy as np
 import statsmodels.api as sm
 import plotly.express as px
 
-# 🇨🇦 Improved Canadian Styling for Better Visibility 🇨🇦
+# 🇨🇦 Improved Styling with Better Font Visibility 🇨🇦
 st.markdown(
     """
     <style>
@@ -37,9 +37,15 @@ st.markdown(
             color: #333333; /* Dark Gray */
             text-align: center;
         }
-        .table-text {
-            font-size: 18px;
-            color: #333333; /* Dark Gray */
+        .table-header {
+            font-size: 20px;
+            font-weight: bold;
+            color: #0d47a1; /* Deep Blue */
+        }
+        .table-value {
+            font-size: 20px;
+            font-weight: bold;
+            color: #b71c1c; /* Dark Red */
         }
         .section-bg {
             background-color: #f9f9f9;
@@ -62,12 +68,6 @@ st.sidebar.header("🇨🇦 Simulation Settings 🇨🇦")
 sectors = ["Automotive", "Agriculture", "Manufacturing", "Energy", "Technology"]
 selected_sector = st.sidebar.selectbox("Select Industry Sector:", sectors)
 tariff_rate = st.sidebar.slider("Tariff Rate Increase (%)", 10, 50, 25, 5)
-
-# 🇨🇦 Canadian Economic Data (Mock)
-st.markdown('<p class="sub-header">📊 Canadian Trade Overview</p>', unsafe_allow_html=True)
-st.markdown('<p class="info-text">🇨🇦 <strong>Canada GDP:</strong> CAD 2.2 Trillion</p>', unsafe_allow_html=True)
-st.markdown('<p class="info-text">🌎 <strong>Top Trading Partners:</strong> USA, China, EU, Mexico</p>', unsafe_allow_html=True)
-st.markdown('<p class="info-text">📈 <strong>Annual Exports to USA:</strong> CAD 500 Billion</p>', unsafe_allow_html=True)
 
 # Gravity Model Data (Mock Data for Demonstration)
 trade_data = pd.DataFrame({
@@ -94,31 +94,33 @@ predicted_trade_volume = model.predict(new_data)[0]
 
 # 🇨🇦 Display Trade Impact Analysis 🇨🇦
 st.markdown('<p class="sub-header">📉 Economic Impact Analysis</p>', unsafe_allow_html=True)
-st.markdown('<p class="table-text">This section estimates how tariffs impact trade volume, GDP, and employment.</p>', unsafe_allow_html=True)
+st.markdown('<p class="info-text">This section estimates how tariffs impact trade volume, GDP, and employment.</p>', unsafe_allow_html=True)
 
-trade_impact_data = pd.DataFrame({
-    "Indicator": ["Predicted Trade Volume (Billion CAD)", "GDP Loss Estimate (Billion CAD)", "Job Loss Estimate"],
-    "Estimated Value": [round(predicted_trade_volume, 2), round(0.05 * tariff_rate, 2), round(3000 * tariff_rate, 0)]
+# Display the Table with Styled Columns
+styled_table = pd.DataFrame({
+    "Indicator": [
+        '<span class="table-header">Predicted Trade Volume (Billion CAD)</span>',
+        '<span class="table-header">GDP Loss Estimate (Billion CAD)</span>',
+        '<span class="table-header">Job Loss Estimate</span>'
+    ],
+    "Estimated Value": [
+        f'<span class="table-value">{round(predicted_trade_volume, 2)}</span>',
+        f'<span class="table-value">{round(0.05 * tariff_rate, 2)}</span>',
+        f'<span class="table-value">{round(3000 * tariff_rate, 0)}</span>'
+    ]
 })
-st.table(trade_impact_data)
+st.markdown(styled_table.to_html(escape=False), unsafe_allow_html=True)
 
 # 🇨🇦 Retaliatory Tariff Policy Simulation 🇨🇦
 st.markdown('<p class="sub-header">⚖️ Policy Response Simulation</p>', unsafe_allow_html=True)
-st.markdown('<p class="table-text">Explore potential government responses, including counter-tariffs and subsidies.</p>', unsafe_allow_html=True)
+st.markdown('<p class="info-text">Explore potential government responses, including counter-tariffs and subsidies.</p>', unsafe_allow_html=True)
 
 retaliatory_tariffs = {
-    "U.S. Imports Affected (Billion CAD)": round(0.2 * tariff_rate, 2),
-    "Potential Revenue from Tariffs (Billion CAD)": round(0.08 * tariff_rate, 2)
+    '<span class="table-header">U.S. Imports Affected (Billion CAD)</span>': f'<span class="table-value">{round(0.2 * tariff_rate, 2)}</span>',
+    '<span class="table-header">Potential Revenue from Tariffs (Billion CAD)</span>': f'<span class="table-value">{round(0.08 * tariff_rate, 2)}</span>'
 }
-st.write("**Retaliatory Tariffs:**", retaliatory_tariffs)
-
-# 🇨🇦 Alternative Trade Market Analysis 🇨🇦
-st.markdown('<p class="sub-header">🌍 Trade Diversification Strategy</p>', unsafe_allow_html=True)
-alternative_markets = pd.DataFrame({
-    "Market": ["EU", "China", "Mexico", "India", "Japan"],
-    "Potential Increase in Exports (Billion CAD)": np.random.uniform(5, 20, 5).round(2)
-})
-st.dataframe(alternative_markets)
+for key, value in retaliatory_tariffs.items():
+    st.markdown(f"{key}: {value}", unsafe_allow_html=True)
 
 # Visualization: 🇨🇦 Trade Exposure by Province 🇨🇦
 st.markdown('<p class="sub-header">📍 Trade Exposure by Province</p>', unsafe_allow_html=True)
@@ -130,4 +132,4 @@ fig = px.bar(province_data, x="Province", y="Trade Exposure (%)", color="Trade E
              title="Provincial Trade Exposure to U.S. Tariffs", text="Trade Exposure (%)")
 st.plotly_chart(fig)
 
-st.markdown('<p class="info-text">🍁 <strong>Prototype Version 1.3 - Developed by VisiVault Analytics Ltd.</strong> 🍁</p>', unsafe_allow_html=True)
+st.markdown('<p class="info-text">🍁 <strong>Prototype Version 1.4 - Developed by VisiVault Analytics Ltd.</strong> 🍁</p>', unsafe_allow_html=True)
