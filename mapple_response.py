@@ -13,7 +13,7 @@ import numpy as np
 import statsmodels.api as sm
 import plotly.express as px
 
-# 🇨🇦 Improved Styling with Better Font Visibility 🇨🇦
+# 🇨🇦 Improved Styling for Better Readability on White Background 🇨🇦
 st.markdown(
     """
     <style>
@@ -23,29 +23,29 @@ st.markdown(
         .title-text {
             font-size: 36px;
             font-weight: bold;
-            color: #b71c1c; /* Dark Red */
+            color: #4a4a4a; /* Grey */
             text-align: center;
         }
         .sub-header {
             font-size: 24px;
             font-weight: bold;
-            color: #0d47a1; /* Deep Blue */
+            color: #333333; /* Dark Grey */
             text-align: center;
         }
         .info-text {
             font-size: 18px;
-            color: #333333; /* Dark Gray */
+            color: #4a4a4a; /* Grey */
             text-align: center;
         }
         .table-header {
             font-size: 20px;
             font-weight: bold;
-            color: #0d47a1; /* Deep Blue */
+            color: #333333; /* Dark Grey */
         }
         .table-value {
             font-size: 20px;
             font-weight: bold;
-            color: #b71c1c; /* Dark Red */
+            color: #4a4a4a; /* Grey */
         }
         .section-bg {
             background-color: #f9f9f9;
@@ -132,4 +132,4 @@ fig = px.bar(province_data, x="Province", y="Trade Exposure (%)", color="Trade E
              title="Provincial Trade Exposure to U.S. Tariffs", text="Trade Exposure (%)")
 st.plotly_chart(fig)
 
-st.markdown('<p class="info-text">🍁 <strong>Prototype Version 1.4 - Developed by VisiVault Analytics Ltd.</strong> 🍁</p>', unsafe_allow_html=True)
+st.markdown('<p class="info-text">🍁 <strong>Prototype Version 1.5 - Developed by VisiVault Analytics Ltd.</strong> 🍁</p>', unsafe_allow_html=True)
