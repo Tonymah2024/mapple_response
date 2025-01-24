@@ -53,16 +53,24 @@ st.markdown('<p class="title-text">📊 US Tariffs Impact on Canada - Policy Sim
 # ==================== 🌍 Fetch Real Data 🌍 ====================
 st.markdown('<p class="sub-header">🌍 Real-Time Economic Indicators</p>', unsafe_allow_html=True)
 
-# Fetch GDP data
-gdp_data = requests.get("https://api.worldbank.org/v2/country/CA/indicator/NY.GDP.MKTP.CD?format=json").json()
-canada_gdp = gdp_data[1][0]["value"] if gdp_data and len(gdp_data) > 1 else "Unavailable"
+# Fetch GDP data for Canada & US
+gdp_canada_data = requests.get("https://api.worldbank.org/v2/country/CA/indicator/NY.GDP.MKTP.CD?format=json").json()
+gdp_us_data = requests.get("https://api.worldbank.org/v2/country/US/indicator/NY.GDP.MKTP.CD?format=json").json()
 
-# Fetch Inflation (CPI) data
-inflation_data = requests.get("https://api.worldbank.org/v2/country/CA/indicator/FP.CPI.TOTL?format=json").json()
-canada_inflation = inflation_data[1][0]["value"] if inflation_data and len(inflation_data) > 1 else "Unavailable"
+canada_gdp = gdp_canada_data[1][0]["value"] if gdp_canada_data and len(gdp_canada_data) > 1 else "Unavailable"
+us_gdp = gdp_us_data[1][0]["value"] if gdp_us_data and len(gdp_us_data) > 1 else "Unavailable"
 
-st.markdown(f"<p class='info-text'>🇨🇦 **Canada GDP:** CAD {canada_gdp:,.2f}</p>", unsafe_allow_html=True)
-st.markdown(f"<p class='info-text'>📈 **Canada Inflation Rate:** {canada_inflation:.2f}%</p>", unsafe_allow_html=True)
+# Fetch Inflation (CPI) data for Canada & US
+inflation_canada_data = requests.get("https://api.worldbank.org/v2/country/CA/indicator/FP.CPI.TOTL?format=json").json()
+inflation_us_data = requests.get("https://api.worldbank.org/v2/country/US/indicator/FP.CPI.TOTL?format=json").json()
+
+canada_inflation = inflation_canada_data[1][0]["value"] if inflation_canada_data and len(inflation_canada_data) > 1 else "Unavailable"
+us_inflation = inflation_us_data[1][0]["value"] if inflation_us_data and len(inflation_us_data) > 1 else "Unavailable"
+
+st.markdown(f"🇨🇦 **Canada GDP:** CAD {canada_gdp:,.2f}")
+st.markdown(f"📈 **Canada Inflation Rate:** {canada_inflation:.2f}%")
+st.markdown(f"🇺🇸 **US GDP:** USD {us_gdp:,.2f}")
+st.markdown(f"📈 **US Inflation Rate:** {us_inflation:.2f}%")
 
 # ==================== 🇺🇸 U.S. Tariff Impact 🇺🇸 ====================
 st.markdown('<p class="sub-header">🇺🇸 U.S. Tariffs on Canada</p>', unsafe_allow_html=True)
@@ -76,7 +84,7 @@ canada_inflation_increase = round(0.02 * us_tariff_rate, 2)
 
 us_impact_table = pd.DataFrame({
     "Indicator": ["Canada Trade Loss (Billion CAD)", "Canada GDP Loss (Billion CAD)",
-                  "Canada Job Loss Estimate", "Inflation Increase (%)"],
+                  "Canada Job Loss Estimate", "Canada Inflation Increase (%)"],
     "Estimated Value": [canada_trade_loss, canada_gdp_loss, canada_job_loss, canada_inflation_increase]
 })
 
@@ -90,45 +98,34 @@ canada_retaliation_tariff = st.slider("Canada’s Tariff on U.S. Goods (%)", 0, 
 subsidy_amount = st.slider("Government Subsidy Support (Billion CAD)", 0, 50, 10, 1)
 corporate_tax_change = st.slider("Corporate Tax Rate Change (%)", -5, 5, 0, 1)
 
-# Calculate Canada’s potential gains
+# U.S. impact due to retaliation
 us_trade_loss = round(canada_trade_loss * (canada_retaliation_tariff / 50), 2)
 us_gdp_impact = round(canada_gdp_loss * (canada_retaliation_tariff / 50), 2)
 us_job_loss = round(canada_job_loss * (canada_retaliation_tariff / 50), 0)
+us_inflation_increase = round(canada_inflation_increase * (canada_retaliation_tariff / 50), 2)
 
 canada_response_table = pd.DataFrame({
-    "Indicator": ["U.S. Trade Loss (Billion USD)", "U.S. GDP Impact (Billion USD)", "U.S. Job Loss Estimate"],
-    "Estimated Value": [us_trade_loss, us_gdp_impact, us_job_loss]
+    "Indicator": ["U.S. Trade Loss (Billion USD)", "U.S. GDP Impact (Billion USD)",
+                  "U.S. Job Loss Estimate", "U.S. Inflation Increase (%)"],
+    "Estimated Value": [us_trade_loss, us_gdp_impact, us_job_loss, us_inflation_increase]
 })
 
 st.table(canada_response_table)
 
-# ==================== 📊 AI-Powered Trade Forecast 📊 ====================
-st.markdown('<p class="sub-header">🤖 AI-Based Trade Forecast</p>', unsafe_allow_html=True)
+# ==================== 🇨🇦 Provincial Vulnerability 🇨🇦 ====================
+st.markdown('<p class="sub-header">🇨🇦 Provincial Vulnerability</p>', unsafe_allow_html=True)
 
-# Train or Load AI Model
-model_file = "trade_model.pkl"
-if not os.path.exists(model_file):
-    np.random.seed(42)
-    X = np.random.randint(5, 50, size=(100, 3))
-    y = 500 - (X[:, 0] * 5) + (X[:, 1] * 2) - (X[:, 2] * 1.5)
-    model = LinearRegression()
-    model.fit(X, y)
-    joblib.dump(model, model_file)
-else:
-    model = joblib.load(model_file)
+provinces = ["Ontario", "Quebec", "British Columbia", "Alberta", "Manitoba", "Saskatchewan"]
+vulnerability = [0.35, 0.25, 0.15, 0.1, 0.1, 0.05]
 
-future_trade_volume = model.predict([[us_tariff_rate, subsidy_amount, corporate_tax_change]])[0]
-st.markdown(f'<p class="info-text">📈 **Predicted Canada Trade Volume in 5 Years:** {future_trade_volume:,.2f} Billion CAD</p>', unsafe_allow_html=True)
+province_df = pd.DataFrame({"Province": provinces, "Vulnerability Index": vulnerability})
+fig = px.bar(province_df, x="Province", y="Vulnerability Index", title="Trade Vulnerability by Province")
+st.plotly_chart(fig)
 
 # ==================== 📄 Export Reports 📄 ====================
 st.markdown('<p class="sub-header">📑 Export Report</p>', unsafe_allow_html=True)
 
-# Export to Excel
-excel_buffer = io.BytesIO()
-us_impact_table.to_excel(excel_buffer, index=False)
-st.download_button("📥 Download Excel Report", excel_buffer.getvalue(), "us_tariff_impact.xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-
-# Export to PDF (Fixed Error)
+# Export to PDF
 pdf = FPDF()
 pdf.add_page()
 pdf.set_font("Arial", size=12)
