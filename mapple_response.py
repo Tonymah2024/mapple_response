@@ -7,25 +7,24 @@ Original file is located at
     https://colab.research.google.com/drive/1BWvPLs9O5-RKRQE00R9Ds9-4-8voAkux
 """
 
+# -*- coding: utf-8 -*-
 import streamlit as st
 import pandas as pd
 import numpy as np
-import statsmodels.api as sm
-import plotly.express as px
 import requests
 import io
 import joblib
 import os
+import plotly.express as px
 from fpdf import FPDF
 from sklearn.linear_model import LinearRegression
 
-# ==================== 🇨🇦 Styling for Visibility 🇨🇦 ====================
+# ==================== 🇨🇦 Styling ====================
+st.set_page_config(page_title="US Tariffs Impact on Canada", layout="wide")
+
 st.markdown(
     """
     <style>
-        .stApp {
-            background-color: #ffffff;
-        }
         .title-text {
             font-size: 36px;
             font-weight: bold;
@@ -48,98 +47,103 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# ==================== 🇨🇦 Title & Header 🇨🇦 ====================
-st.markdown('<p class="title-text">🇨🇦 U.S. Tariff Impact Analysis on Canada 🇨🇦</p>', unsafe_allow_html=True)
-st.image("https://upload.wikimedia.org/wikipedia/commons/c/cf/Flag_of_Canada.svg", width=200)
+# ==================== 🇨🇦 Title ====================
+st.markdown('<p class="title-text">📊 US Tariffs Impact on Canada - Policy Simulation</p>', unsafe_allow_html=True)
 
-# ==================== 🌍 Fetch Real-Time Economic Indicators 🌍 ====================
-st.markdown('<p class="sub-header">📊 Real-Time Economic Indicators</p>', unsafe_allow_html=True)
+# ==================== 🌍 Fetch Real Data 🌍 ====================
+st.markdown('<p class="sub-header">🌍 Real-Time Economic Indicators</p>', unsafe_allow_html=True)
+
+# Fetch GDP data
 world_bank_url = "https://api.worldbank.org/v2/country/CA/indicator/NY.GDP.MKTP.CD?format=json"
-response = requests.get(world_bank_url)
+gdp_data = requests.get(world_bank_url).json()
+canada_gdp = gdp_data[1][0]["value"] if gdp_data and len(gdp_data) > 1 else "Unavailable"
 
-if response.status_code == 200:
-    data = response.json()
-    latest_gdp = data[1][0]["value"]
-    st.markdown(f'<p class="info-text">🇨🇦 **Canada GDP (Latest):** CAD {latest_gdp:,.2f}</p>', unsafe_allow_html=True)
-else:
-    st.markdown('<p class="info-text">⚠️ Unable to fetch real-time GDP data.</p>', unsafe_allow_html=True)
+# Fetch Inflation (CPI) data
+inflation_url = "https://api.worldbank.org/v2/country/CA/indicator/FP.CPI.TOTL?format=json"
+inflation_data = requests.get(inflation_url).json()
+canada_inflation = inflation_data[1][0]["value"] if inflation_data and len(inflation_data) > 1 else "Unavailable"
 
-# ==================== 🇺🇸 U.S. Tariff Impact Inputs 🇺🇸 ====================
-st.sidebar.header("🇺🇸 U.S. Tariff Impact Simulation 🇺🇸")
+st.markdown(f"<p class='info-text'>🇨🇦 **Canada GDP:** CAD {canada_gdp:,.2f}</p>", unsafe_allow_html=True)
+st.markdown(f"<p class='info-text'>📈 **Canada Inflation Rate:** {canada_inflation:.2f}%</p>", unsafe_allow_html=True)
 
-tariff_rate = st.sidebar.slider("U.S. Tariff Rate Increase (%)", 0, 50, 10, 5)
-canadian_export_value = st.sidebar.number_input("Total Canadian Exports to U.S. (Billion CAD)", 50, 500, 200)
+# ==================== 🇨🇦 User Inputs 🇨🇦 ====================
+st.sidebar.header("🇨🇦 Simulation Settings")
+
+sectors = ["Automotive", "Agriculture", "Manufacturing", "Energy", "Technology"]
+selected_sector = st.sidebar.selectbox("Select Industry Sector:", sectors)
+tariff_rate = st.sidebar.slider("Tariff Rate Increase (%)", 5, 50, 20, 5)
 subsidy_amount = st.sidebar.slider("Government Subsidy Support (Billion CAD)", 0, 50, 10, 1)
+corporate_tax_change = st.sidebar.slider("Corporate Tax Rate Change (%)", -5, 5, 0, 1)
 
-# ==================== 📉 Economic Impact Analysis 📉 ====================
-st.markdown('<p class="sub-header">📉 Economic Impact Analysis</p>', unsafe_allow_html=True)
-predicted_trade_volume = round(canadian_export_value - (tariff_rate * 3), 2)
-gdp_loss = round(0.04 * tariff_rate, 2)
-job_loss = round(2000 * tariff_rate, 0)
+# ==================== 📊 Economic Impact Simulation 📊 ====================
+st.markdown('<p class="sub-header">📊 Economic Impact Analysis</p>', unsafe_allow_html=True)
+
+# Simple estimation of economic impact
+predicted_trade_volume = round(500 - (tariff_rate * 5), 2)
+gdp_loss = round(0.03 * tariff_rate, 2)
+job_loss = round(3000 * tariff_rate, 0)
+inflation_increase = round(0.02 * tariff_rate, 2)
 
 economic_table = pd.DataFrame({
-    "Indicator": ["Predicted Trade Volume (Billion CAD)", "GDP Loss Estimate (Billion CAD)", "Job Loss Estimate"],
-    "Estimated Value": [predicted_trade_volume, gdp_loss, job_loss]
+    "Indicator": ["Predicted Trade Volume (Billion CAD)", "GDP Loss Estimate (Billion CAD)",
+                  "Job Loss Estimate", "Inflation Increase (%)"],
+    "Estimated Value": [predicted_trade_volume, gdp_loss, job_loss, inflation_increase]
 })
 
 st.table(economic_table)
 
-# ==================== 🔍 Predictive Economic Simulation 🔍 ====================
-st.markdown('<p class="sub-header">📊 Predictive Economic Simulation</p>', unsafe_allow_html=True)
+# ==================== 📊 AI-Based Trade Forecast 📊 ====================
+st.markdown('<p class="sub-header">🤖 AI-Powered Trade Forecast</p>', unsafe_allow_html=True)
 
-# Load or train AI model
-model_file = "us_tariff_model.pkl"
+model_file = "trade_model.pkl"
 if not os.path.exists(model_file):
-    # Generate synthetic training data
-    X_train = np.array([[x, y] for x in range(0, 51, 5) for y in range(0, 51, 5)])
-    y_train = np.array([200 - (x * 3) + (y * 0.5) for x, y in X_train])
-
+    # Train model with simple dummy dataset
+    np.random.seed(42)
+    X = np.random.randint(5, 50, size=(100, 3))  # Tariff Rate, Subsidy, Corporate Tax Change
+    y = 500 - (X[:, 0] * 5) + (X[:, 1] * 2) - (X[:, 2] * 1.5)  # Trade Volume Estimate
     model = LinearRegression()
-    model.fit(X_train, y_train)
+    model.fit(X, y)
     joblib.dump(model, model_file)
 else:
     model = joblib.load(model_file)
 
-future_trade_volume = model.predict([[tariff_rate, subsidy_amount]])[0]
+future_trade_volume = model.predict([[tariff_rate, subsidy_amount, corporate_tax_change]])[0]
 st.markdown(f'<p class="info-text">📈 **Predicted Trade Volume in 5 Years:** {future_trade_volume:,.2f} Billion CAD</p>', unsafe_allow_html=True)
 
-# ==================== 📄 Export Reports to PDF & Excel 📄 ====================
+# ==================== 🇺🇸 Effect on US Economy 🇺🇸 ====================
+st.markdown('<p class="sub-header">🇺🇸 Impact on US Economy</p>', unsafe_allow_html=True)
+
+us_trade_loss = round(predicted_trade_volume * 0.7, 2)  # Assuming 70% reduction affects the U.S.
+us_gdp_impact = round(gdp_loss * 1.5, 2)  # Assuming 1.5x multiplier effect
+us_job_loss = round(job_loss * 1.2, 0)  # 20% more job loss in the U.S.
+
+us_table = pd.DataFrame({
+    "Indicator": ["US Trade Loss (Billion USD)", "US GDP Impact (Billion USD)", "US Job Loss Estimate"],
+    "Estimated Value": [us_trade_loss, us_gdp_impact, us_job_loss]
+})
+
+st.table(us_table)
+
+# ==================== 📄 Export Reports 📄 ====================
 st.markdown('<p class="sub-header">📑 Export Report</p>', unsafe_allow_html=True)
 
-# 📥 Export to Excel
+# Export to Excel
 excel_buffer = io.BytesIO()
-economic_table.to_excel(excel_buffer, index=False, engine='openpyxl')
-st.download_button(
-    label="📥 Download Excel Report",
-    data=excel_buffer.getvalue(),
-    file_name="us_tariff_impact_analysis.xlsx",
-    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-)
+economic_table.to_excel(excel_buffer, index=False)
+st.download_button("📥 Download Excel Report", excel_buffer.getvalue(), "trade_impact_analysis.xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 
-# 📥 Export to PDF
+# Export to PDF
 pdf = FPDF()
 pdf.add_page()
 pdf.set_font("Arial", size=12)
-pdf.cell(200, 10, "U.S. Tariff Impact Analysis Report", ln=True, align='C')
+pdf.cell(200, 10, "Trade Impact Analysis Report", ln=True, align='C')
 pdf.ln(10)
 
-pdf.cell(200, 10, f"Predicted Trade Volume: {predicted_trade_volume} Billion CAD", ln=True)
-pdf.cell(200, 10, f"GDP Loss Estimate: {gdp_loss} Billion CAD", ln=True)
-pdf.cell(200, 10, f"Job Loss Estimate: {job_loss}", ln=True)
-pdf.ln(10)
-
-pdf.cell(200, 10, f"Government Subsidy Support: {subsidy_amount} Billion CAD", ln=True)
-pdf.ln(10)
+for index, row in economic_table.iterrows():
+    pdf.cell(200, 10, f"{row['Indicator']}: {row['Estimated Value']}", ln=True)
 
 pdf_buffer = io.BytesIO()
-pdf.output(pdf_buffer, 'S')
+pdf.output(pdf_buffer, 'F')
+st.download_button("📥 Download PDF Report", pdf_buffer.getvalue(), "trade_impact_analysis.pdf", "application/pdf")
 
-st.download_button(
-    label="📥 Download PDF Report",
-    data=pdf_buffer.getvalue(),
-    file_name="us_tariff_impact_analysis.pdf",
-    mime="application/pdf"
-)
-
-# ==================== ✅ Final Message ✅ ====================
-st.markdown('<p class="info-text">🍁 <strong>Developed by VisiVault Analytics Ltd.</strong> 🍁</p>', unsafe_allow_html=True)
+st.markdown('<p class="info-text">📊 Developed by VisiVault Analytics Ltd.</p>', unsafe_allow_html=True)
