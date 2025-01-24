@@ -19,7 +19,7 @@ import plotly.express as px
 from fpdf import FPDF
 from sklearn.linear_model import LinearRegression
 
-# ==================== 🇨🇦 Styling ====================
+# ==================== 🇨🇦 Page Configuration ====================
 st.set_page_config(page_title="US Tariffs Impact on Canada", layout="wide")
 
 st.markdown(
@@ -54,96 +54,95 @@ st.markdown('<p class="title-text">📊 US Tariffs Impact on Canada - Policy Sim
 st.markdown('<p class="sub-header">🌍 Real-Time Economic Indicators</p>', unsafe_allow_html=True)
 
 # Fetch GDP data
-world_bank_url = "https://api.worldbank.org/v2/country/CA/indicator/NY.GDP.MKTP.CD?format=json"
-gdp_data = requests.get(world_bank_url).json()
+gdp_data = requests.get("https://api.worldbank.org/v2/country/CA/indicator/NY.GDP.MKTP.CD?format=json").json()
 canada_gdp = gdp_data[1][0]["value"] if gdp_data and len(gdp_data) > 1 else "Unavailable"
 
 # Fetch Inflation (CPI) data
-inflation_url = "https://api.worldbank.org/v2/country/CA/indicator/FP.CPI.TOTL?format=json"
-inflation_data = requests.get(inflation_url).json()
+inflation_data = requests.get("https://api.worldbank.org/v2/country/CA/indicator/FP.CPI.TOTL?format=json").json()
 canada_inflation = inflation_data[1][0]["value"] if inflation_data and len(inflation_data) > 1 else "Unavailable"
 
 st.markdown(f"<p class='info-text'>🇨🇦 **Canada GDP:** CAD {canada_gdp:,.2f}</p>", unsafe_allow_html=True)
 st.markdown(f"<p class='info-text'>📈 **Canada Inflation Rate:** {canada_inflation:.2f}%</p>", unsafe_allow_html=True)
 
-# ==================== 🇨🇦 User Inputs 🇨🇦 ====================
-st.sidebar.header("🇨🇦 Simulation Settings")
+# ==================== 🇺🇸 U.S. Tariff Impact 🇺🇸 ====================
+st.markdown('<p class="sub-header">🇺🇸 U.S. Tariffs on Canada</p>', unsafe_allow_html=True)
+us_tariff_rate = st.slider("U.S. Tariff Rate on Canadian Goods (%)", 5, 50, 20, 5)
 
-sectors = ["Automotive", "Agriculture", "Manufacturing", "Energy", "Technology"]
-selected_sector = st.sidebar.selectbox("Select Industry Sector:", sectors)
-tariff_rate = st.sidebar.slider("Tariff Rate Increase (%)", 5, 50, 20, 5)
-subsidy_amount = st.sidebar.slider("Government Subsidy Support (Billion CAD)", 0, 50, 10, 1)
-corporate_tax_change = st.sidebar.slider("Corporate Tax Rate Change (%)", -5, 5, 0, 1)
+# Estimate economic impact
+canada_trade_loss = round(500 - (us_tariff_rate * 5), 2)
+canada_gdp_loss = round(0.03 * us_tariff_rate, 2)
+canada_job_loss = round(3000 * us_tariff_rate, 0)
+canada_inflation_increase = round(0.02 * us_tariff_rate, 2)
 
-# ==================== 📊 Economic Impact Simulation 📊 ====================
-st.markdown('<p class="sub-header">📊 Economic Impact Analysis</p>', unsafe_allow_html=True)
-
-# Simple estimation of economic impact
-predicted_trade_volume = round(500 - (tariff_rate * 5), 2)
-gdp_loss = round(0.03 * tariff_rate, 2)
-job_loss = round(3000 * tariff_rate, 0)
-inflation_increase = round(0.02 * tariff_rate, 2)
-
-economic_table = pd.DataFrame({
-    "Indicator": ["Predicted Trade Volume (Billion CAD)", "GDP Loss Estimate (Billion CAD)",
-                  "Job Loss Estimate", "Inflation Increase (%)"],
-    "Estimated Value": [predicted_trade_volume, gdp_loss, job_loss, inflation_increase]
+us_impact_table = pd.DataFrame({
+    "Indicator": ["Canada Trade Loss (Billion CAD)", "Canada GDP Loss (Billion CAD)",
+                  "Canada Job Loss Estimate", "Inflation Increase (%)"],
+    "Estimated Value": [canada_trade_loss, canada_gdp_loss, canada_job_loss, canada_inflation_increase]
 })
 
-st.table(economic_table)
+st.table(us_impact_table)
 
-# ==================== 📊 AI-Based Trade Forecast 📊 ====================
-st.markdown('<p class="sub-header">🤖 AI-Powered Trade Forecast</p>', unsafe_allow_html=True)
+# ==================== 🇨🇦 Canada's Response 🇨🇦 ====================
+st.markdown('<p class="sub-header">🇨🇦 Canada’s Countermeasures</p>', unsafe_allow_html=True)
 
+# Canada’s retaliation tariffs
+canada_retaliation_tariff = st.slider("Canada’s Tariff on U.S. Goods (%)", 0, 50, 10, 5)
+subsidy_amount = st.slider("Government Subsidy Support (Billion CAD)", 0, 50, 10, 1)
+corporate_tax_change = st.slider("Corporate Tax Rate Change (%)", -5, 5, 0, 1)
+
+# Calculate Canada’s potential gains
+us_trade_loss = round(canada_trade_loss * (canada_retaliation_tariff / 50), 2)
+us_gdp_impact = round(canada_gdp_loss * (canada_retaliation_tariff / 50), 2)
+us_job_loss = round(canada_job_loss * (canada_retaliation_tariff / 50), 0)
+
+canada_response_table = pd.DataFrame({
+    "Indicator": ["U.S. Trade Loss (Billion USD)", "U.S. GDP Impact (Billion USD)", "U.S. Job Loss Estimate"],
+    "Estimated Value": [us_trade_loss, us_gdp_impact, us_job_loss]
+})
+
+st.table(canada_response_table)
+
+# ==================== 📊 AI-Powered Trade Forecast 📊 ====================
+st.markdown('<p class="sub-header">🤖 AI-Based Trade Forecast</p>', unsafe_allow_html=True)
+
+# Train or Load AI Model
 model_file = "trade_model.pkl"
 if not os.path.exists(model_file):
-    # Train model with simple dummy dataset
     np.random.seed(42)
-    X = np.random.randint(5, 50, size=(100, 3))  # Tariff Rate, Subsidy, Corporate Tax Change
-    y = 500 - (X[:, 0] * 5) + (X[:, 1] * 2) - (X[:, 2] * 1.5)  # Trade Volume Estimate
+    X = np.random.randint(5, 50, size=(100, 3))
+    y = 500 - (X[:, 0] * 5) + (X[:, 1] * 2) - (X[:, 2] * 1.5)
     model = LinearRegression()
     model.fit(X, y)
     joblib.dump(model, model_file)
 else:
     model = joblib.load(model_file)
 
-future_trade_volume = model.predict([[tariff_rate, subsidy_amount, corporate_tax_change]])[0]
-st.markdown(f'<p class="info-text">📈 **Predicted Trade Volume in 5 Years:** {future_trade_volume:,.2f} Billion CAD</p>', unsafe_allow_html=True)
-
-# ==================== 🇺🇸 Effect on US Economy 🇺🇸 ====================
-st.markdown('<p class="sub-header">🇺🇸 Impact on US Economy</p>', unsafe_allow_html=True)
-
-us_trade_loss = round(predicted_trade_volume * 0.7, 2)  # Assuming 70% reduction affects the U.S.
-us_gdp_impact = round(gdp_loss * 1.5, 2)  # Assuming 1.5x multiplier effect
-us_job_loss = round(job_loss * 1.2, 0)  # 20% more job loss in the U.S.
-
-us_table = pd.DataFrame({
-    "Indicator": ["US Trade Loss (Billion USD)", "US GDP Impact (Billion USD)", "US Job Loss Estimate"],
-    "Estimated Value": [us_trade_loss, us_gdp_impact, us_job_loss]
-})
-
-st.table(us_table)
+future_trade_volume = model.predict([[us_tariff_rate, subsidy_amount, corporate_tax_change]])[0]
+st.markdown(f'<p class="info-text">📈 **Predicted Canada Trade Volume in 5 Years:** {future_trade_volume:,.2f} Billion CAD</p>', unsafe_allow_html=True)
 
 # ==================== 📄 Export Reports 📄 ====================
 st.markdown('<p class="sub-header">📑 Export Report</p>', unsafe_allow_html=True)
 
 # Export to Excel
 excel_buffer = io.BytesIO()
-economic_table.to_excel(excel_buffer, index=False)
-st.download_button("📥 Download Excel Report", excel_buffer.getvalue(), "trade_impact_analysis.xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+us_impact_table.to_excel(excel_buffer, index=False)
+st.download_button("📥 Download Excel Report", excel_buffer.getvalue(), "us_tariff_impact.xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 
-# Export to PDF
+# Export to PDF (Fixed Error)
 pdf = FPDF()
 pdf.add_page()
 pdf.set_font("Arial", size=12)
-pdf.cell(200, 10, "Trade Impact Analysis Report", ln=True, align='C')
+pdf.cell(200, 10, "US Tariff Impact Report", ln=True, align='C')
 pdf.ln(10)
 
-for index, row in economic_table.iterrows():
+for index, row in us_impact_table.iterrows():
     pdf.cell(200, 10, f"{row['Indicator']}: {row['Estimated Value']}", ln=True)
 
-pdf_buffer = io.BytesIO()
-pdf.output(pdf_buffer, 'F')
-st.download_button("📥 Download PDF Report", pdf_buffer.getvalue(), "trade_impact_analysis.pdf", "application/pdf")
+for index, row in canada_response_table.iterrows():
+    pdf.cell(200, 10, f"{row['Indicator']}: {row['Estimated Value']}", ln=True)
+
+pdf_file = "us_tariff_impact.pdf"
+pdf.output(pdf_file)
+st.download_button("📥 Download PDF Report", open(pdf_file, "rb"), pdf_file, "application/pdf")
 
 st.markdown('<p class="info-text">📊 Developed by VisiVault Analytics Ltd.</p>', unsafe_allow_html=True)
