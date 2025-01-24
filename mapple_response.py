@@ -16,6 +16,8 @@ import io
 import joblib
 import os
 import plotly.express as px
+import seaborn as sns
+import matplotlib.pyplot as plt
 from fpdf import FPDF
 from sklearn.linear_model import LinearRegression
 
@@ -53,24 +55,27 @@ st.markdown('<p class="title-text">📊 US Tariffs Impact on Canada - Policy Sim
 # ==================== 🌍 Fetch Real Data 🌍 ====================
 st.markdown('<p class="sub-header">🌍 Real-Time Economic Indicators</p>', unsafe_allow_html=True)
 
-# Fetch GDP data for Canada & US
-gdp_canada_data = requests.get("https://api.worldbank.org/v2/country/CA/indicator/NY.GDP.MKTP.CD?format=json").json()
-gdp_us_data = requests.get("https://api.worldbank.org/v2/country/US/indicator/NY.GDP.MKTP.CD?format=json").json()
+# Fetch GDP and Inflation Data
+def fetch_economic_data(country_code, indicator):
+    url = f"https://api.worldbank.org/v2/country/{country_code}/indicator/{indicator}?format=json"
+    response = requests.get(url)
+    data = response.json()
+    return data[1][0]["value"] if data and len(data) > 1 else "Unavailable"
 
-canada_gdp = gdp_canada_data[1][0]["value"] if gdp_canada_data and len(gdp_canada_data) > 1 else "Unavailable"
-us_gdp = gdp_us_data[1][0]["value"] if gdp_us_data and len(gdp_us_data) > 1 else "Unavailable"
-
-# Fetch Inflation (CPI) data for Canada & US
-inflation_canada_data = requests.get("https://api.worldbank.org/v2/country/CA/indicator/FP.CPI.TOTL?format=json").json()
-inflation_us_data = requests.get("https://api.worldbank.org/v2/country/US/indicator/FP.CPI.TOTL?format=json").json()
-
-canada_inflation = inflation_canada_data[1][0]["value"] if inflation_canada_data and len(inflation_canada_data) > 1 else "Unavailable"
-us_inflation = inflation_us_data[1][0]["value"] if inflation_us_data and len(inflation_us_data) > 1 else "Unavailable"
+canada_gdp = fetch_economic_data("CA", "NY.GDP.MKTP.CD")
+us_gdp = fetch_economic_data("US", "NY.GDP.MKTP.CD")
+canada_inflation = fetch_economic_data("CA", "FP.CPI.TOTL")
+us_inflation = fetch_economic_data("US", "FP.CPI.TOTL")
 
 st.markdown(f"🇨🇦 **Canada GDP:** CAD {canada_gdp:,.2f}")
 st.markdown(f"📈 **Canada Inflation Rate:** {canada_inflation:.2f}%")
 st.markdown(f"🇺🇸 **US GDP:** USD {us_gdp:,.2f}")
 st.markdown(f"📈 **US Inflation Rate:** {us_inflation:.2f}%")
+
+# ==================== 🏭 Select Economic Sector 🏭 ====================
+st.sidebar.header("📌 Select Industry Sector")
+sectors = ["Automotive", "Agriculture", "Manufacturing", "Energy", "Technology"]
+selected_sector = st.sidebar.selectbox("Select Sector:", sectors)
 
 # ==================== 🇺🇸 U.S. Tariff Impact 🇺🇸 ====================
 st.markdown('<p class="sub-header">🇺🇸 U.S. Tariffs on Canada</p>', unsafe_allow_html=True)
@@ -90,7 +95,7 @@ us_impact_table = pd.DataFrame({
 
 st.table(us_impact_table)
 
-# ==================== 🇨🇦 Canada's Response 🇨🇦 ====================
+# ==================== 🇨🇦 Canada’s Response 🇨🇦 ====================
 st.markdown('<p class="sub-header">🇨🇦 Canada’s Countermeasures</p>', unsafe_allow_html=True)
 
 # Canada’s retaliation tariffs
@@ -112,15 +117,16 @@ canada_response_table = pd.DataFrame({
 
 st.table(canada_response_table)
 
-# ==================== 🇨🇦 Provincial Vulnerability 🇨🇦 ====================
+# ==================== 🔥 Heatmap of Provincial Vulnerability 🔥 ====================
 st.markdown('<p class="sub-header">🇨🇦 Provincial Vulnerability</p>', unsafe_allow_html=True)
 
 provinces = ["Ontario", "Quebec", "British Columbia", "Alberta", "Manitoba", "Saskatchewan"]
 vulnerability = [0.35, 0.25, 0.15, 0.1, 0.1, 0.05]
-
 province_df = pd.DataFrame({"Province": provinces, "Vulnerability Index": vulnerability})
-fig = px.bar(province_df, x="Province", y="Vulnerability Index", title="Trade Vulnerability by Province")
-st.plotly_chart(fig)
+
+fig, ax = plt.subplots(figsize=(10, 4))
+sns.heatmap(province_df.set_index("Province").T, cmap="Reds", annot=True, linewidths=0.5)
+st.pyplot(fig)
 
 # ==================== 📄 Export Reports 📄 ====================
 st.markdown('<p class="sub-header">📑 Export Report</p>', unsafe_allow_html=True)
