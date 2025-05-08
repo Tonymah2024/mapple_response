@@ -117,3 +117,105 @@ if not canada_gdp_series.empty:
     st.markdown('<p class="sub-header">📈 Historical GDP Trend - Canada</p>', unsafe_allow_html=True)
     fig_gdp = px.line(canada_gdp_series, x="date", y="value", title="Canada GDP Over Time (US$)")
     st.plotly_chart(fig_gdp, use_container_width=True)
+
+# ==================== 📂 Upload Feature ====================
+st.sidebar.markdown("### 📂 Upload Your Dataset")
+uploaded_file = st.sidebar.file_uploader("Upload CSV", type="csv")
+
+if uploaded_file is not None:
+    user_df = pd.read_csv(uploaded_file)
+    st.markdown("### 👁 Preview of Uploaded Data")
+    st.dataframe(user_df)
+
+    numeric_cols = user_df.select_dtypes(include=np.number).columns.tolist()
+    if len(numeric_cols) >= 2:
+        st.markdown("### 🔍 Try Predicting")
+        feature = st.selectbox("Select feature to use for prediction:", numeric_cols)
+        target = st.selectbox("Select target variable:", [col for col in numeric_cols if col != feature])
+        value = st.slider(f"Select value for {feature}", float(user_df[feature].min()), float(user_df[feature].max()))
+
+        model = LinearRegression()
+        model.fit(user_df[[feature]], user_df[target])
+        prediction = model.predict([[value]])
+        st.success(f"📈 Predicted {target}: {prediction[0]:.2f}")
+
+# ==================== 🏭 Select Economic Sector 🏭 ====================
+st.sidebar.header("📌 Select Industry Sector")
+sectors = ["Automotive", "Agriculture", "Manufacturing", "Energy", "Technology"]
+selected_sector = st.sidebar.selectbox("Select Sector:", sectors)
+
+# ==================== 🇺🇸 U.S. Tariff Impact 🇺🇸 ====================
+st.markdown('<p class="sub-header">🇺🇸 U.S. Tariffs on Canada</p>', unsafe_allow_html=True)
+us_tariff_rate = st.slider("U.S. Tariff Rate on Canadian Goods (%)", 5, 50, 20, 5)
+
+canada_trade_loss = round(500 - (us_tariff_rate * 5), 2)
+canada_gdp_loss = round(0.03 * us_tariff_rate, 2)
+canada_job_loss = round(3000 * us_tariff_rate, 0)
+canada_inflation_increase = round(0.02 * us_tariff_rate, 2)
+
+us_impact_table = pd.DataFrame({
+    "Indicator": ["Canada Trade Loss (Billion CAD)", "Canada GDP Loss (Billion CAD)", 
+                  "Canada Job Loss Estimate", "Canada Inflation Increase (%)"],
+    "Estimated Value": [canada_trade_loss, canada_gdp_loss, canada_job_loss, canada_inflation_increase]
+})
+
+st.table(us_impact_table)
+
+# ==================== 🇨🇦 Canada’s Response 🇨🇦 ====================
+st.markdown('<p class="sub-header">🇨🇦 Canada’s Countermeasures</p>', unsafe_allow_html=True)
+
+canada_retaliation_tariff = st.slider("Canada’s Tariff on U.S. Goods (%)", 0, 50, 10, 5)
+subsidy_amount = st.slider("Government Subsidy Support (Billion CAD)", 0, 50, 10, 1)
+corporate_tax_change = st.slider("Corporate Tax Rate Change (%)", -5, 5, 0, 1)
+
+us_trade_loss = round(canada_trade_loss * (canada_retaliation_tariff / 50), 2)
+us_gdp_impact = round(canada_gdp_loss * (canada_retaliation_tariff / 50), 2)
+us_job_loss = round(canada_job_loss * (canada_retaliation_tariff / 50), 0)
+us_inflation_increase = round(canada_inflation_increase * (canada_retaliation_tariff / 50), 2)
+
+canada_response_table = pd.DataFrame({
+    "Indicator": ["U.S. Trade Loss (Billion USD)", "U.S. GDP Impact (Billion USD)", 
+                  "U.S. Job Loss Estimate", "U.S. Inflation Increase (%)"],
+    "Estimated Value": [us_trade_loss, us_gdp_impact, us_job_loss, us_inflation_increase]
+})
+
+st.table(canada_response_table)
+
+# ==================== 🔥 Heatmap of Provincial Vulnerability 🔥 ====================
+st.markdown('<p class="sub-header">🇨🇦 Provincial Vulnerability</p>', unsafe_allow_html=True)
+
+provinces = ["Ontario", "Quebec", "British Columbia", "Alberta", "Manitoba", "Saskatchewan"]
+vulnerability = [0.35, 0.25, 0.15, 0.1, 0.1, 0.05]
+province_df = pd.DataFrame({"Province": provinces, "Vulnerability Index": vulnerability})
+
+fig, ax = plt.subplots(figsize=(10, 4))
+sns.heatmap(province_df.set_index("Province").T, cmap="Reds", annot=True, linewidths=0.5)
+st.pyplot(fig)
+
+# ==================== 📄 Export Reports 📄 ====================
+st.markdown('<p class="sub-header">📑 Export Report</p>', unsafe_allow_html=True)
+
+pdf = FPDF()
+pdf.add_page()
+pdf.set_font("Arial", size=12)
+pdf.cell(200, 10, "US Tariff Impact Report", ln=True, align='C')
+pdf.ln(10)
+
+for index, row in us_impact_table.iterrows():
+    pdf.cell(200, 10, f"{row['Indicator']}: {row['Estimated Value']}", ln=True)
+
+for index, row in canada_response_table.iterrows():
+    pdf.cell(200, 10, f"{row['Indicator']}: {row['Estimated Value']}", ln=True)
+
+pdf_buffer = io.BytesIO()
+pdf.output(pdf_buffer, dest='S')
+pdf_data = pdf_buffer.getvalue()
+
+st.download_button(
+    label="📥 Download PDF Report",
+    data=pdf_data,
+    file_name="us_tariff_impact.pdf",
+    mime="application/pdf"
+)
+
+st.markdown('<p class="info-text">📊 Developed by VisiVault Analytics Ltd.</p>', unsafe_allow_html=True)
