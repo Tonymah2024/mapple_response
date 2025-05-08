@@ -79,21 +79,24 @@ st.sidebar.markdown("### 📂 Upload Your Dataset")
 uploaded_file = st.sidebar.file_uploader("Upload CSV", type="csv")
 
 if uploaded_file is not None:
-    user_df = pd.read_csv(uploaded_file)
-    st.markdown("### 👁 Preview of Uploaded Data")
-    st.dataframe(user_df)
+    try:
+        user_df = pd.read_csv(uploaded_file)
+        st.markdown("### 👁 Preview of Uploaded Data")
+        st.dataframe(user_df)
 
-    numeric_cols = user_df.select_dtypes(include=np.number).columns.tolist()
-    if len(numeric_cols) >= 2:
-        st.markdown("### 🔍 Try Predicting")
-        feature = st.selectbox("Select feature to use for prediction:", numeric_cols)
-        target = st.selectbox("Select target variable:", [col for col in numeric_cols if col != feature])
-        value = st.slider(f"Select value for {feature}", float(user_df[feature].min()), float(user_df[feature].max()))
+        numeric_cols = user_df.select_dtypes(include=np.number).columns.tolist()
+        if len(numeric_cols) >= 2:
+            st.markdown("### 🔍 Try Predicting")
+            feature = st.selectbox("Select feature to use for prediction:", numeric_cols)
+            target = st.selectbox("Select target variable:", [col for col in numeric_cols if col != feature])
+            value = st.slider(f"Select value for {feature}", float(user_df[feature].min()), float(user_df[feature].max()))
 
-        model = LinearRegression()
-        model.fit(user_df[[feature]], user_df[target])
-        prediction = model.predict(np.array([[value]]))
-        st.success(f"📈 Predicted {target}: {prediction[0]:.2f}")
+            model = LinearRegression()
+            model.fit(user_df[[feature]], user_df[target])
+            prediction = model.predict(np.array([[value]]))
+            st.success(f"📈 Predicted {target}: {prediction[0]:.2f}")
+    except Exception as e:
+        st.error("❌ Failed to load dataset. Please ensure it is a clean CSV file.")
 
 # ==================== 🏭 Select Economic Sector 🏭 ====================
 st.sidebar.header("📌 Select Industry Sector")
@@ -151,27 +154,27 @@ st.pyplot(fig)
 # ==================== 📄 Export Reports 📄 ====================
 st.markdown('<p class="sub-header">📑 Export Report</p>', unsafe_allow_html=True)
 
-pdf = FPDF()
-pdf.add_page()
-pdf.set_font("Arial", size=12)
-pdf.cell(200, 10, "US Tariff Impact Report", ln=True, align='C')
-pdf.ln(10)
+try:
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.set_font("Arial", size=12)
+    pdf.cell(200, 10, "US Tariff Impact Report", ln=True, align='C')
+    pdf.ln(10)
 
-for index, row in us_impact_table.iterrows():
-    pdf.cell(200, 10, f"{row['Indicator']}: {row['Estimated Value']}", ln=True)
+    for index, row in us_impact_table.iterrows():
+        pdf.cell(200, 10, f"{row['Indicator']}: {row['Estimated Value']}", ln=True)
 
-for index, row in canada_response_table.iterrows():
-    pdf.cell(200, 10, f"{row['Indicator']}: {row['Estimated Value']}", ln=True)
+    for index, row in canada_response_table.iterrows():
+        pdf.cell(200, 10, f"{row['Indicator']}: {row['Estimated Value']}", ln=True)
 
-pdf_buffer = io.BytesIO()
-pdf.output(pdf_buffer)
-pdf_data = pdf_buffer.getvalue()
-
-st.download_button(
-    label="📥 Download PDF Report",
-    data=pdf_data,
-    file_name="us_tariff_impact.pdf",
-    mime="application/pdf"
-)
+    pdf_output = pdf.output(dest='S').encode('latin1')
+    st.download_button(
+        label="📥 Download PDF Report",
+        data=pdf_output,
+        file_name="us_tariff_impact.pdf",
+        mime="application/pdf"
+    )
+except Exception as e:
+    st.error("❌ Failed to generate PDF report. Please try again.")
 
 st.markdown('<p class="info-text">📊 Developed by VisiVault Analytics Ltd.</p>', unsafe_allow_html=True)
