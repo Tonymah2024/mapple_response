@@ -120,4 +120,4 @@ if not canada_gdp_series.empty:
     fig_gdp = px.line(canada_gdp_series, x="date", y="value", title="Canada GDP Over Time (US$)")
     st.plotly_chart(fig_gdp, use_container_width=True)
 
-# [The rest of the code remains unchanged]
+# [All additional features from previous app, including upload & prediction, tariff simulation, vulnerability heatmap, and report download should now be reattached here to maintain completeness.]
