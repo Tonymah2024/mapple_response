@@ -43,6 +43,28 @@ st.markdown(
 # ==================== 🇨🇦 Title ====================
 st.markdown('<p class="title-text">📊 US Tariffs Impact on Canada - Policy Simulation</p>', unsafe_allow_html=True)
 
+# ==================== ℹ️ Interpretation Help ====================
+st.info("""
+**How to Interpret the Results**
+
+- **GDP and Inflation Metrics** reflect real-time economic indicators pulled from the World Bank API.
+- **Tariff Impact Tables** estimate the economic effects of tariffs, such as trade loss and job loss.
+- **Vulnerability Index** represents how sensitive each province is to U.S. tariffs. Values closer to 1 indicate higher vulnerability, meaning that province's economy is more affected by tariffs.
+- **User Upload & Prediction** lets users try a basic prediction using their own CSV dataset with numerical columns.
+""")
+
+st.sidebar.markdown("""
+**📄 CSV Upload Requirements:**
+- Upload a CSV file containing only numeric columns (e.g., GDP, employment, output).
+- At least 2 columns are needed.
+- Example structure:
+
+| GDP | Employment |
+|-----|------------|
+| 500 | 12000      |
+| 700 | 15000      |
+""")
+
 # ==================== 🌍 Fetch Real Data 🌍 ====================
 st.markdown('<p class="sub-header">🌍 Real-Time Economic Indicators</p>', unsafe_allow_html=True)
 
