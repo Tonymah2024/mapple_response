@@ -46,22 +46,45 @@ st.markdown('<p class="title-text">📊 US Tariffs Impact on Canada - Policy Sim
 # ==================== 🌍 Fetch Real Data 🌍 ====================
 st.markdown('<p class="sub-header">🌍 Real-Time Economic Indicators</p>', unsafe_allow_html=True)
 
-# Fetch GDP and Inflation Data
 def fetch_economic_data(country_code, indicator):
     url = f"https://api.worldbank.org/v2/country/{country_code}/indicator/{indicator}?format=json"
     response = requests.get(url)
     data = response.json()
-    return data[1][0]["value"] if data and len(data) > 1 else "Unavailable"
+    return data[1][0]["value"] if data and len(data) > 1 else None
 
 canada_gdp = fetch_economic_data("CA", "NY.GDP.MKTP.CD")
 us_gdp = fetch_economic_data("US", "NY.GDP.MKTP.CD")
 canada_inflation = fetch_economic_data("CA", "FP.CPI.TOTL")
 us_inflation = fetch_economic_data("US", "FP.CPI.TOTL")
 
-st.markdown(f"🇨🇦 **Canada GDP:** CAD {canada_gdp:,.2f}")
-st.markdown(f"📈 **Canada Inflation Rate:** {canada_inflation:.2f}%")
-st.markdown(f"🇺🇸 **US GDP:** USD {us_gdp:,.2f}")
-st.markdown(f"📈 **US Inflation Rate:** {us_inflation:.2f}%")
+col1, col2 = st.columns(2)
+col1.metric("🇨🇦 Canada GDP", f"{canada_gdp:,.2f}" if isinstance(canada_gdp, (int, float)) else "Unavailable")
+col2.metric("📈 Canada Inflation", f"{canada_inflation:.2f}%" if isinstance(canada_inflation, (int, float)) else "Unavailable")
+
+col3, col4 = st.columns(2)
+col3.metric("🇺🇸 US GDP", f"{us_gdp:,.2f}" if isinstance(us_gdp, (int, float)) else "Unavailable")
+col4.metric("📈 US Inflation", f"{us_inflation:.2f}%" if isinstance(us_inflation, (int, float)) else "Unavailable")
+
+# ==================== 📂 Upload Feature ====================
+st.sidebar.markdown("### 📂 Upload Your Dataset")
+uploaded_file = st.sidebar.file_uploader("Upload CSV", type="csv")
+
+if uploaded_file is not None:
+    user_df = pd.read_csv(uploaded_file)
+    st.markdown("### 👁 Preview of Uploaded Data")
+    st.dataframe(user_df)
+
+    numeric_cols = user_df.select_dtypes(include=np.number).columns.tolist()
+    if len(numeric_cols) >= 2:
+        st.markdown("### 🔍 Try Predicting")
+        feature = st.selectbox("Select feature to use for prediction:", numeric_cols)
+        target = st.selectbox("Select target variable:", [col for col in numeric_cols if col != feature])
+        value = st.slider(f"Select value for {feature}", float(user_df[feature].min()), float(user_df[feature].max()))
+
+        model = LinearRegression()
+        model.fit(user_df[[feature]], user_df[target])
+        prediction = model.predict([[value]])
+        st.success(f"📈 Predicted {target}: {prediction[0]:.2f}")
 
 # ==================== 🏭 Select Economic Sector 🏭 ====================
 st.sidebar.header("📌 Select Industry Sector")
@@ -72,7 +95,6 @@ selected_sector = st.sidebar.selectbox("Select Sector:", sectors)
 st.markdown('<p class="sub-header">🇺🇸 U.S. Tariffs on Canada</p>', unsafe_allow_html=True)
 us_tariff_rate = st.slider("U.S. Tariff Rate on Canadian Goods (%)", 5, 50, 20, 5)
 
-# Estimate economic impact
 canada_trade_loss = round(500 - (us_tariff_rate * 5), 2)
 canada_gdp_loss = round(0.03 * us_tariff_rate, 2)
 canada_job_loss = round(3000 * us_tariff_rate, 0)
@@ -89,12 +111,10 @@ st.table(us_impact_table)
 # ==================== 🇨🇦 Canada’s Response 🇨🇦 ====================
 st.markdown('<p class="sub-header">🇨🇦 Canada’s Countermeasures</p>', unsafe_allow_html=True)
 
-# Canada’s retaliation tariffs
 canada_retaliation_tariff = st.slider("Canada’s Tariff on U.S. Goods (%)", 0, 50, 10, 5)
 subsidy_amount = st.slider("Government Subsidy Support (Billion CAD)", 0, 50, 10, 1)
 corporate_tax_change = st.slider("Corporate Tax Rate Change (%)", -5, 5, 0, 1)
 
-# U.S. impact due to retaliation
 us_trade_loss = round(canada_trade_loss * (canada_retaliation_tariff / 50), 2)
 us_gdp_impact = round(canada_gdp_loss * (canada_retaliation_tariff / 50), 2)
 us_job_loss = round(canada_job_loss * (canada_retaliation_tariff / 50), 0)
@@ -122,7 +142,6 @@ st.pyplot(fig)
 # ==================== 📄 Export Reports 📄 ====================
 st.markdown('<p class="sub-header">📑 Export Report</p>', unsafe_allow_html=True)
 
-# Export to PDF (Fixing the TypeError)
 pdf = FPDF()
 pdf.add_page()
 pdf.set_font("Arial", size=12)
@@ -136,7 +155,7 @@ for index, row in canada_response_table.iterrows():
     pdf.cell(200, 10, f"{row['Indicator']}: {row['Estimated Value']}", ln=True)
 
 pdf_buffer = io.BytesIO()
-pdf.output(pdf_buffer, dest='S')  # Use 'S' to write output as a string
+pdf.output(pdf_buffer, dest='S')
 pdf_data = pdf_buffer.getvalue()
 
 st.download_button(
