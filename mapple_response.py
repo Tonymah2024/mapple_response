@@ -48,9 +48,18 @@ st.markdown('<p class="sub-header">🌍 Real-Time Economic Indicators</p>', unsa
 
 def fetch_economic_data(country_code, indicator):
     url = f"https://api.worldbank.org/v2/country/{country_code}/indicator/{indicator}?format=json"
-    response = requests.get(url)
-    data = response.json()
-    return data[1][0]["value"] if data and len(data) > 1 else None
+    try:
+        response = requests.get(url, timeout=10)
+        response.raise_for_status()
+        data = response.json()
+        if data and isinstance(data, list) and len(data) > 1 and isinstance(data[1], list) and "value" in data[1][0]:
+            return data[1][0]["value"]
+        return None
+    except Exception:
+        return None
+
+def format_metric(value, prefix=""):
+    return f"{prefix}{value:,.2f}" if isinstance(value, (int, float)) else "Unavailable"
 
 canada_gdp = fetch_economic_data("CA", "NY.GDP.MKTP.CD")
 us_gdp = fetch_economic_data("US", "NY.GDP.MKTP.CD")
@@ -58,11 +67,11 @@ canada_inflation = fetch_economic_data("CA", "FP.CPI.TOTL")
 us_inflation = fetch_economic_data("US", "FP.CPI.TOTL")
 
 col1, col2 = st.columns(2)
-col1.metric("🇨🇦 Canada GDP", f"{canada_gdp:,.2f}" if isinstance(canada_gdp, (int, float)) else "Unavailable")
+col1.metric("🇨🇦 Canada GDP", format_metric(canada_gdp, "CAD "))
 col2.metric("📈 Canada Inflation", f"{canada_inflation:.2f}%" if isinstance(canada_inflation, (int, float)) else "Unavailable")
 
 col3, col4 = st.columns(2)
-col3.metric("🇺🇸 US GDP", f"{us_gdp:,.2f}" if isinstance(us_gdp, (int, float)) else "Unavailable")
+col3.metric("🇺🇸 US GDP", format_metric(us_gdp, "USD "))
 col4.metric("📈 US Inflation", f"{us_inflation:.2f}%" if isinstance(us_inflation, (int, float)) else "Unavailable")
 
 # ==================== 📂 Upload Feature ====================
@@ -83,7 +92,7 @@ if uploaded_file is not None:
 
         model = LinearRegression()
         model.fit(user_df[[feature]], user_df[target])
-        prediction = model.predict([[value]])
+        prediction = model.predict(np.array([[value]]))
         st.success(f"📈 Predicted {target}: {prediction[0]:.2f}")
 
 # ==================== 🏭 Select Economic Sector 🏭 ====================
@@ -155,7 +164,7 @@ for index, row in canada_response_table.iterrows():
     pdf.cell(200, 10, f"{row['Indicator']}: {row['Estimated Value']}", ln=True)
 
 pdf_buffer = io.BytesIO()
-pdf.output(pdf_buffer, dest='S')
+pdf.output(pdf_buffer)
 pdf_data = pdf_buffer.getvalue()
 
 st.download_button(
